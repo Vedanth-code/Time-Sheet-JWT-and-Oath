@@ -1,0 +1,13 @@
+.topbar {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    width: 100%;
+}
+
+#profie {
+    width: 2vw;
+    height: 2vw;
+    border-radius: 50%;
+    background-color: aquamarine;
+}
