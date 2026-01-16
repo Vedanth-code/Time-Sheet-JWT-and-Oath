@@ -117,9 +117,10 @@ export async function Login(data) {
 export async function storeData(data) {
     try {
         let db = await createConnection();
-        let { task_name, description, start_date, end_date, totalduration, user_id } = data;
-        console.log("The totalduration is ", totalduration);
-        let result = await db.query("INSERT INTO taskdata(task_name,description,start_time,end_time,user_id) VALUES(?,?,?,?,?);", [task_name, description, start_date, end_date, user_id, totalduration]);
+        let { task_name, description, start_date, end_date, user_id, attachment_path } = data;
+        console.log("The attachment is ", attachment_path);
+        // Note: This assumes 'attachment_path' column exists in 'taskdata' table.
+        let result = await db.query("INSERT INTO taskdata(task_name,description,start_time,end_time,user_id, attachment_path) VALUES(?,?,?,?,?,?);", [task_name, description, start_date, end_date, user_id, attachment_path]);
 
         return {
             "status": 200,
@@ -129,7 +130,7 @@ export async function storeData(data) {
     } catch (error) {
         console.log("Error ", error);
         return {
-            "status": 500,
+            "status": error.status,
             "message": "Internal Error while saving task",
             "body": error
         }

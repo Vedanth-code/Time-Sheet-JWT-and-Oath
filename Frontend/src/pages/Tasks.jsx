@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import Header from '../components/Header';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { ArrowUpRight, DollarSign, Clock, AlertCircle, Filter, Download } from 'lucide-react';
 import '../index.css';
 import './Dashboard.css';
 import { formatDuration } from './Body';
+import TaskDetailsModal from '../components/TaskDetailsModal';
 
 const data = [
     { day: 'Mon', hours: 7.5 },
@@ -17,9 +19,29 @@ const COLORS = ['#3b82f6', '#3b82f6', '#3b82f6', '#3b82f6', '#3b82f6'];
 
 function Tasks({ totalDurationMs, tasks }) {
     console.log("the tASKS ARE ............... ", tasks)
+
+    const [selectedTask, setSelectedTask] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleTaskClick = (task) => {
+        setSelectedTask(task);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedTask(null);
+    };
+
     return (
         <div className="page-content">
             <Header title="Tasks" />
+
+            <TaskDetailsModal
+                show={isModalOpen}
+                task={selectedTask}
+                onClose={handleCloseModal}
+            />
 
             {/* Controls */}
             {/* <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded-lg border border-slate-200">
@@ -63,8 +85,11 @@ function Tasks({ totalDurationMs, tasks }) {
                         <div className="activity-list">
                             {
                                 tasks.map((t) => (
-                                    <>
-                                        <div key={t.id} className="activity-item">
+                                    <div key={t.id}>
+                                        <div
+                                            className="activity-item cursor-pointer hover:bg-slate-50 transition-colors p-2 rounded-lg"
+                                            onClick={() => handleTaskClick(t)}
+                                        >
                                             <div className="activity-icon"></div>
                                             <div className="activity-details">
                                                 <h4 className="text-sm font-medium">{t.task_name}</h4>
@@ -73,7 +98,7 @@ function Tasks({ totalDurationMs, tasks }) {
                                             <span className="time-ago">{formatDuration(t.totalduration)}</span>
                                         </div>
                                         <hr />
-                                    </>
+                                    </div>
                                 ))}
                         </div>
                         <button className="btn btn-ghost w-full mt-4">View All Activity</button>

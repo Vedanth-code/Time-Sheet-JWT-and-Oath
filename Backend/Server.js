@@ -19,6 +19,13 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 
 // Session middleware
 app.use(session({
@@ -154,9 +161,31 @@ app.post('/api/logout', (req, res) => {
 });
 
 
-app.post('/api/savetask', authenticateToken, async (req, res) => {
+import multer from "multer";
+import path from "path";
+
+// Multer configuration
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        console.log('📁 Saving to: uploads/');  // Debug
+        cb(null, 'uploads/');
+    },
+    filename: function (req, file, cb) {
+        console.log('📄 Filename:', file.originalname);  // Debug
+        cb(null, file.originalname);
+    }
+});
+
+
+const upload = multer({ storage: storage })
+
+app.post('/api/savetask', authenticateToken, upload.single('file'), async (req, res) => {
     let token = req.cookies.accessToken;
     let currUser;
+
+    // ✅ DEBUG: Check if file uploaded
+    console.log('File uploaded:', req.file ? req.file.filename : 'NO FILE');
+
     await jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
             console.log("JWT verification failed:", err);
@@ -166,8 +195,7 @@ app.post('/api/savetask', authenticateToken, async (req, res) => {
 
     })
 
-    let reqdata = { ...req.body, "user_id": await currUser.userId };
-
+    let reqdata = { ...req.body, "user_id": await currUser.userId, "attachment_path": req.file.filename };
 
     let data = await storeData(reqdata);
 
@@ -212,6 +240,22 @@ app.get('/api/getTask', authenticateToken, async (req, res) => {
         })
     }
 })
+
+
+app.get('/images', (req, res) => {
+    const filename = req.query.filename;
+    const filePath = path.join(__dirname, 'uploads', filename);
+
+    console.log("the filename is ", filename);
+
+    // Check if file exists
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        res.status(404).json({ error: 'Image not found' });
+    }
+});
+
 
 app.listen(8080, () => {
     console.log("The app is listening to 8080");

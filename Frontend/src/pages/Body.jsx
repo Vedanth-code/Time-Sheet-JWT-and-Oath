@@ -57,33 +57,32 @@ function Body({ totalDurationMs, setTotalDurationMs, tasks, setTasks }) {
 
         console.log("............................................................the diff is ", diffMs);
 
-        const newTask = {
-            id: Date.now(),
-            taskName: formData.get('tname'),
-            description: formData.get('desc'),
-            startTime: stime,
-            endTime: etime,
-            durationMs: diffMs
-        };
 
         // setTasks(prev => [...prev, newTask]);
         setTotalDurationMs(prev => prev + diffMs);
 
         try {
-            const result = await fetch("http://localhost:8080/api/savetask", {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "Content-type": "application/json",
-                },
-                body: JSON.stringify({
-                    "task_name": formData.get('tname') || "Coding",
-                    "description": formData.get('desc') || "Practicing problem solving",
-                    "start_date": stime,
-                    "end_date": etime,
-                    "totalduration": diffMs
-                })
-            });
+            const uploadData = new FormData();
+            uploadData.append('task_name', formData.get('tname') || "Coding");
+            uploadData.append('description', formData.get('desc') || "Practicing problem solving");
+            uploadData.append('start_date', stime);
+            uploadData.append('end_date', etime);
+            uploadData.append('totalduration', diffMs);
+
+            // Append file if it exists (assuming input name is 'attachment')
+            const file = formData.get('attachment');
+            if (file) {
+                uploadData.append('file', file);
+            }
+            console.log("THe file is ", file.name);
+
+            const result =
+                await fetch("http://localhost:8080/api/savetask", {
+                    method: "POST",
+                    credentials: "include",
+                    // Do NOT set Content-Type header for FormData, browser sets it with boundary
+                    body: uploadData
+                });
 
             const data = await result.json();
             console.log("The data status is ", data);
@@ -94,6 +93,14 @@ function Body({ totalDurationMs, setTotalDurationMs, tasks, setTasks }) {
                     title: 'Success!',
                     message: 'Task saved successfully!'
                 });
+            } else if (data.status == 401) {
+                setModalState({
+                    show: true,
+                    type: 'error',
+                    title: 'Session timeout',
+                    message: data.message || 'Please login again.'
+                });
+                navigate('/login');
             } else {
                 setModalState({
                     show: true,
@@ -104,6 +111,7 @@ function Body({ totalDurationMs, setTotalDurationMs, tasks, setTasks }) {
             }
             console.log(data);
 
+            e.target.reset();
 
         } catch (error) {
             setModalState({
@@ -114,7 +122,6 @@ function Body({ totalDurationMs, setTotalDurationMs, tasks, setTasks }) {
             });
         }
 
-        e.target.reset();
         setStartTimeValue('');
     }
 
@@ -174,6 +181,11 @@ function Body({ totalDurationMs, setTotalDurationMs, tasks, setTasks }) {
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="description">Description</label>
                                 <textarea className="input min-h-[80px]" name="desc" id="description" placeholder="What did you work on?"></textarea>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="attachment">Attachment</label>
+                                <input className="input" type="file" name="attachment" id="attachment" />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
