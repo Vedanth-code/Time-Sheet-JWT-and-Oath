@@ -23,7 +23,7 @@ const Login = () => {
 
   const handleGoogleLogin = () => {
     // Redirect to backend OAuth route
-    window.location.href = 'http://localhost:8080/auth/google';
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
   };
 
 
@@ -32,7 +32,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/login", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
         method: 'POST',
         credentials: 'include',
         headers: {

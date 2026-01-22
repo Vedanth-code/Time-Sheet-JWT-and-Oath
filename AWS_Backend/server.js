@@ -7,10 +7,10 @@ import session from "express-session";
 import passport from "passport";
 import "./config/passport.js";
 
+
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs';
-
 
 import { S3Client } from '@aws-sdk/client-s3';
 import multer from 'multer';
@@ -18,46 +18,7 @@ import multerS3 from 'multer-s3';
 
 let bucketfileName;
 
-
-
-// AWS S3 Client (use IAM credentials or env vars)
-const s3Client = new S3Client({
-    region: process.env.AWS_REGION, // Your RDS region
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    }
-});
-
-const storage = multerS3({
-    s3: s3Client,
-    bucket: process.env.S3_BUCKET_NAME, // Create this in AWS S3 Console
-    acl: 'public-read',  // Makes files publicly accessible via direct URL
-    metadata: (req, file, cb) => {
-        cb(null, { fieldName: file.fieldname });
-    },
-    key: (req, file, cb) => {
-        bucketfileName = `${Date.now()}_${file.originalname}`;
-        cb(null, bucketfileName);
-    },
-    contentType: multerS3.AUTO_CONTENT_TYPE
-});
-
-const upload = multer({
-    storage: storage,
-    limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB limit
-    },
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only images allowed!'), false);
-        }
-    }
-});
-
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 8080;
 
 const app = express();
 
@@ -90,6 +51,12 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Add as FIRST route in your app.js/server.js
+app.get('/', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
+
 // Auth routes
 app.get('/auth/google',
     passport.authenticate('google', { scope: ['profile', 'email'] })
@@ -114,7 +81,7 @@ app.get('/auth/google/callback',
 
         // Redirect to frontend with username
         const username = encodeURIComponent(req.user.name);
-        res.redirect(`http://localhost:5173/dashboard?username=${username}`);
+        res.redirect(`https://dw3amckjax0vt.cloudfront.net/dashboard?username=${username}`);
     }
 );
 
@@ -122,7 +89,7 @@ app.get('/auth/google/callback',
 app.get('/auth/logout', (req, res) => {
     req.logout(() => {
         res.clearCookie('token');
-        res.redirect('http://localhost:5173/');
+        res.redirect('https://dw3amckjax0vt.cloudfront.net/');
     });
 });
 
@@ -166,8 +133,6 @@ app.post('/login', async (req, res) => {
         // Set httpOnly cookie for access token (short-lived)
         res.cookie('accessToken', result.data.accessToken, {
             httpOnly: true,
-            //             secure: process.env.NODE_ENV === 'production',
-            // sameSite: 'strict',
             secure: false, // process.env.NODE_ENV === 'production', // Disabled for HTTP AWS
             sameSite: 'lax', // 'strict', // Relaxed for cross-origin
             maxAge: 15 * 60 * 1000, // 15 minutes
@@ -178,8 +143,7 @@ app.post('/login', async (req, res) => {
         // Set httpOnly cookie for refresh token
         res.cookie('refreshToken', result.data.refreshToken, {
             httpOnly: true,
-            //             secure: process.env.NODE_ENV === 'production',
-            // sameSite: 'strict',
+
             secure: false, // process.env.NODE_ENV === 'production',
             sameSite: 'lax', // 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -201,8 +165,6 @@ app.post('/login', async (req, res) => {
 app.post('/api/logout', (req, res) => {
     const cookieOptions = {
         httpOnly: true,
-        //         secure: process.env.NODE_ENV === 'production', // Match login setting
-        // sameSite: 'strict',
         secure: false, // process.env.NODE_ENV === 'production', // Match login setting
         sameSite: 'lax', // 'strict',
         path: '/api'  // Must match the path used when setting the cookie
@@ -234,6 +196,45 @@ app.post('/api/logout', (req, res) => {
 // const upload = multer({ storage: storage })
 
 
+
+
+
+// AWS S3 Client (use IAM credentials or env vars)
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION, // Your RDS region
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    }
+});
+
+const storage = multerS3({
+    s3: s3Client,
+    bucket: process.env.S3_BUCKET_NAME, // Create this in AWS S3 Console
+    acl: 'public-read',  // Makes files publicly accessible via direct URL
+    metadata: (req, file, cb) => {
+        cb(null, { fieldName: file.fieldname });
+    },
+    key: (req, file, cb) => {
+        bucketfileName = `${Date.now()}_${file.originalname}`;
+        cb(null, bucketfileName);
+    },
+    contentType: multerS3.AUTO_CONTENT_TYPE
+});
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only images allowed!'), false);
+        }
+    }
+});
 
 
 app.post('/api/savetask', authenticateToken, upload.single('file'), async (req, res) => {

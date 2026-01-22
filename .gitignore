@@ -32,3 +32,13 @@ dist-ssr
 backend/node_modules/
 backend/.env
 backend/config/
+
+
+Frontend/.env.production
+Frontend/.env.production
+
+AWS_Backend/.ebextensions/01-open-443.config
+AWS_Backend/.platform/nginx/conf.d/proxy.conf
+AWS_Backend/Procfile
+AWS_Backend/backend.zip
+AWS_Backend/backend_working.zip

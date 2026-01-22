@@ -18,7 +18,7 @@ const TaskDetailsModal = ({ show, task, onClose }) => {
         if (!path) return null;
         // Extract just the filename in case the path contains 'uploads/' or backslashes
         const filename = task.attachment_path;
-        return `http://localhost:8080/images?filename=${filename}`;
+        return `https://timesheet-tasks-uploads.s3.eu-north-1.amazonaws.com/${filename}`;
     };
 
     const imageUrl = getImageUrl(task.attachment_path);

@@ -1,14 +1,27 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Header from '../components/Header';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { ArrowUpRight, DollarSign, Clock, AlertCircle } from 'lucide-react';
 import '../index.css';
 import './Dashboard.css';
 import { formatDuration } from './Body';
+import TaskDetailsModal from '../components/TaskDetailsModal';
 
 const COLORS = ['#3b82f6', '#3b82f6', '#3b82f6', '#3b82f6', '#3b82f6', '#3b82f6', '#3b82f6'];
 
 function Dashboard({ totalDurationMs, tasks }) {
+    const [selectedTask, setSelectedTask] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+
+    const handleTaskClick = (task) => {
+        setSelectedTask(task);
+        setShowModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setShowModal(false);
+        setSelectedTask(null);
+    };
 
     const chartData = useMemo(() => {
         const days = [];
@@ -106,8 +119,18 @@ function Dashboard({ totalDurationMs, tasks }) {
                         <h3 className="card-title">Recent Activity</h3>
                         <div className="activity-list">
                             {[...tasks].reverse().map((t) => (
-                                <>
-                                    <div key={t.id} className="activity-item">
+                                <div key={t.id}>
+                                    <div
+                                        className="activity-item"
+                                        onClick={() => handleTaskClick(t)}
+                                        role="button"
+                                        tabIndex={0}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                handleTaskClick(t);
+                                            }
+                                        }}
+                                    >
                                         <div className="activity-icon"></div>
                                         <div className="activity-details">
                                             <h4 className="text-sm font-medium">{t.task_name}</h4>
@@ -116,7 +139,7 @@ function Dashboard({ totalDurationMs, tasks }) {
                                         <span className="time-ago">{formatDuration(t.totalduration)}</span>
                                     </div>
                                     <hr />
-                                </>
+                                </div>
                             ))}
                         </div>
                         <button className="btn btn-ghost w-full mt-4">View All Activity</button>
@@ -124,6 +147,12 @@ function Dashboard({ totalDurationMs, tasks }) {
                 </div>
 
             </div>
+
+            <TaskDetailsModal
+                show={showModal}
+                task={selectedTask}
+                onClose={handleCloseModal}
+            />
         </div>
     );
 }

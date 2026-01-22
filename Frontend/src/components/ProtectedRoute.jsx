@@ -7,7 +7,7 @@ const ProtectedRoute = () => {
 
     useEffect(() => {
         // Verify token with backend
-        fetch('http://localhost:8080/api/verify', {
+        fetch(`${import.meta.env.VITE_API_URL}/api/verify`, {
             method: 'GET',
             credentials: 'include' // Send HTTP-only cookie
         })
@@ -24,7 +24,16 @@ const ProtectedRoute = () => {
 
     // Show loading state while checking auth
     if (isLoading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="loading-overlay">
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                    <div className="loading-spinner"></div>
+                    <p style={{ color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.95rem' }}>
+                        Verifying Session...
+                    </p>
+                </div>
+            </div>
+        );
     }
 
     // Redirect to login if not authenticated

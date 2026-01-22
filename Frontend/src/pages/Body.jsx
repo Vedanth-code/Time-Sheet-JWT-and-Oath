@@ -36,6 +36,7 @@ function Body({ totalDurationMs, setTotalDurationMs, tasks, setTasks }) {
 
     async function handleSubmit(e) {
         e.preventDefault();
+        console.log("Button clickedd......")
         const formData = new FormData(e.target);
 
         const stime = formData.get('stime');
@@ -77,7 +78,7 @@ function Body({ totalDurationMs, setTotalDurationMs, tasks, setTasks }) {
             console.log("THe file is ", file.name);
 
             const result =
-                await fetch("http://localhost:8080/api/savetask", {
+                await fetch(`${import.meta.env.VITE_API_URL}/api/savetask`, {
                     method: "POST",
                     credentials: "include",
                     // Do NOT set Content-Type header for FormData, browser sets it with boundary

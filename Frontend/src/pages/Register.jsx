@@ -29,7 +29,7 @@ const Register = () => {
         console.log('Register attempt:', formData);
 
         try {
-            const result = await fetch("http://localhost:8080/saveUser", {
+            const result = await fetch(`${import.meta.env.VITE_API_URL}/saveUser`, {
                 method: "POST",
                 headers: {
                     "Content-type": "application/json",
